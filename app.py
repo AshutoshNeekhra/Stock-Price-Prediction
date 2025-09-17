@@ -114,14 +114,10 @@ predicted_prices = scaler_full.inverse_transform(np.array(predictions).reshape(-
 # Prepare future dates
 future_dates = pd.date_range(data.index[-1] + pd.Timedelta(days=1), periods=future_days)
 
-# Create table
+# Display table
 st.subheader('📅 Predicted Close Prices for Next 30 Days')
 pred_df = pd.DataFrame({
     'Date': future_dates,
     'Predicted Close': predicted_prices
 })
 st.write(pred_df)
-
-ax.set_ylabel('Price')
-ax.legend()
-st.pyplot(fig_future)
