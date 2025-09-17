@@ -87,9 +87,7 @@ st.pyplot(fig4)
 
 
 
-# -----------------------
-# Future 30-Day Prediction
-# -----------------------
+# Future 30-day prediction
 scaler_full = MinMaxScaler(feature_range=(0,1))
 scaled_close = scaler_full.fit_transform(np.array(close_data).reshape(-1,1))
 
@@ -106,13 +104,16 @@ for i in range(future_days):
 
 predicted_prices = scaler_full.inverse_transform(np.array(predictions).reshape(-1,1)).flatten()
 
-future_dates = pd.date_range(close_data.index[-1] + pd.Timedelta(days=1), periods=future_days)
+# Use numeric x-axis for smooth plotting
+historical_index = np.arange(len(close_data))
+future_index = np.arange(len(close_data), len(close_data)+future_days)
 
+# Plot
 st.subheader('📈 Predicted Prices for Next 30 Days')
 fig_future, ax = plt.subplots(figsize=(12,6))
-ax.plot(close_data.index, close_data, label='Historical Close', color='green')
-ax.plot(future_dates, predicted_prices, 'r-o', label='Predicted Future Close')
-ax.set_xlabel('Date')
+ax.plot(historical_index, close_data.values, label='Historical Close', color='green')
+ax.plot(future_index, predicted_prices, 'r-o', label='Predicted Future Close')
+ax.set_xlabel('Days')
 ax.set_ylabel('Price')
 ax.legend()
 st.pyplot(fig_future)
