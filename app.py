@@ -46,11 +46,8 @@ for i in range(future_days):
 predicted_prices = scaler.inverse_transform(np.array(predictions).reshape(-1,1)).flatten()
 
 # Prepare future dates
-future_dates = pd.date_range(close_data.index[-1], periods=future_days+1)  # include last date for smooth transition
-
-# Extend last historical price to match plot start
-future_prices_for_plot = np.concatenate(([close_data.iloc[-1]], predicted_prices))
-
+future_prices_for_plot = np.concatenate((np.array([close_data.iloc[-1]]), predicted_prices))
+future_dates = pd.date_range(close_data.index[-1], periods=future_days+1)
 # Calculate moving averages
 ma_50 = close_data.rolling(50).mean()
 ma_100 = close_data.rolling(100).mean()
