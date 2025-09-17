@@ -87,33 +87,41 @@ st.pyplot(fig4)
 
 
 
-# Future 30-day prediction
-scaler_full = MinMaxScaler(feature_range=(0,1))
-scaled_close = scaler_full.fit_transform(np.array(close_data).reshape(-1,1))
+# -----------------------
+# Future 30-Day Prediction Table
+# -----------------------
 
+# Scale full close data
+scaler_full = MinMaxScaler(feature_range=(0,1))
+scaled_close = scaler_full.fit_transform(np.array(data['Close']).reshape(-1,1))
+
+# Take last 100 days for prediction
 last_100_days = scaled_close[-100:]
 future_days = 30
 predictions = []
 
 current_batch = last_100_days.reshape(1, 100, 1)
 
+# Predict next 30 days
 for i in range(future_days):
     predicted_price = model.predict(current_batch)[0,0]
     predictions.append(predicted_price)
     current_batch = np.append(current_batch[:,1:,:], predicted_price.reshape(1,1,1), axis=1)
 
+# Reverse scaling and flatten
 predicted_prices = scaler_full.inverse_transform(np.array(predictions).reshape(-1,1)).flatten()
 
-# Use numeric x-axis for smooth plotting
-historical_index = np.arange(len(close_data))
-future_index = np.arange(len(close_data), len(close_data)+future_days)
+# Prepare future dates
+future_dates = pd.date_range(data.index[-1] + pd.Timedelta(days=1), periods=future_days)
 
-# Plot
-st.subheader('📈 Predicted Prices for Next 30 Days')
-fig_future, ax = plt.subplots(figsize=(12,6))
-ax.plot(historical_index, close_data.values, label='Historical Close', color='green')
-ax.plot(future_index, predicted_prices, 'r-o', label='Predicted Future Close')
-ax.set_xlabel('Days')
+# Create table
+st.subheader('📅 Predicted Close Prices for Next 30 Days')
+pred_df = pd.DataFrame({
+    'Date': future_dates,
+    'Predicted Close': predicted_prices
+})
+st.write(pred_df)
+
 ax.set_ylabel('Price')
 ax.legend()
 st.pyplot(fig_future)
