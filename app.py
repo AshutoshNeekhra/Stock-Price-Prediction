@@ -19,7 +19,7 @@ end = '2024-12-31'
 # Download stock data
 data = yf.download(stock, start, end)
 
-st.subheader('Stock Data')
+st.subheader('Stock Data','GOOG')
 st.write(data)
 
 # Split data
