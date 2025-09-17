@@ -41,7 +41,7 @@ for i in range(future_days):
     predictions.append(predicted_price)
     
     # Update current batch by appending the new prediction and removing first value
-    current_batch = np.append(current_batch[:,1:,:], [[predicted_price]], axis=1)
+    current_batch = np.append(current_batch[:,1:,:], predicted_price.reshape(1,1,1), axis=1)
 
 # Reverse scaling
 predicted_prices = scaler.inverse_transform(np.array(predictions).reshape(-1,1))
