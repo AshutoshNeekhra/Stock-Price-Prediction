@@ -12,74 +12,55 @@ model = load_model("Stock Prediction Model.keras")
 st.header('📈 Stock Price Prediction')
 
 # Input
-stock = st.text_input('Enter Stock Symbol','GOOG')
+stock = st.text_input('Enter Stock Symbol', 'GOOG')
 start = '2012-01-01'
 end = '2024-12-31'
 
 # Download stock data
 data = yf.download(stock, start, end)
-
 st.subheader('Stock Data')
-st.write(data)
+st.write(data.tail(5))  # show last 5 rows
 
-# Split data
-data_train = pd.DataFrame(data.Close[0:int(len(data) * 0.80)])
-data_test = pd.DataFrame(data.Close[int(len(data) * 0.80): len(data)])
+# Close price
+close_data = data['Close']
 
 # Scaling
 scaler = MinMaxScaler(feature_range=(0, 1))
-past_100_days = data_train.tail(100)
-data_test = pd.concat([past_100_days, data_test], ignore_index=True)
-data_test_scale = scaler.fit_transform(data_test)
+scaled_data = scaler.fit_transform(np.array(close_data).reshape(-1,1))
 
-# Moving averages plots
-st.subheader('Price vs MA50')
-ma_50_days = data.Close.rolling(50).mean()
-fig1 = plt.figure(figsize=(10, 6))
-plt.plot(ma_50_days, 'r', label='MA50')
-plt.plot(data.Close, 'g', label='Close Price')
-plt.legend()
-st.pyplot(fig1)
+# Get last 100 days for prediction
+last_100_days = scaled_data[-100:]
 
-st.subheader('Price vs MA50 vs MA100')
-ma_100_days = data.Close.rolling(100).mean()
-fig2 = plt.figure(figsize=(10, 6))
-plt.plot(ma_50_days, 'r', label='MA50')
-plt.plot(ma_100_days, 'b', label='MA100')
-plt.plot(data.Close, 'g', label='Close Price')
-plt.legend()
-st.pyplot(fig2)
+future_days = 30
+predictions = []
 
-st.subheader('Price vs MA100 vs MA200')
-ma_200_days = data.Close.rolling(200).mean()
-fig3 = plt.figure(figsize=(10, 6))
-plt.plot(ma_100_days, 'r', label='MA100')
-plt.plot(ma_200_days, 'b', label='MA200')
-plt.plot(data.Close, 'g', label='Close Price')
-plt.legend()
-st.pyplot(fig3)
+current_batch = last_100_days.reshape(1, 100, 1)
 
-# Prepare test data
-x, y = [], []
-for i in range(100, data_test_scale.shape[0]):
-    x.append(data_test_scale[i - 100:i])
-    y.append(data_test_scale[i, 0])
-
-x, y = np.array(x), np.array(y)
-
-# Predictions
-predict = model.predict(x)
+for i in range(future_days):
+    predicted_price = model.predict(current_batch)[0,0]
+    predictions.append(predicted_price)
+    
+    # Update current batch by appending the new prediction and removing first value
+    current_batch = np.append(current_batch[:,1:,:], [[predicted_price]], axis=1)
 
 # Reverse scaling
-predict = scaler.inverse_transform(predict)
-y = scaler.inverse_transform(y.reshape(-1, 1))
+predicted_prices = scaler.inverse_transform(np.array(predictions).reshape(-1,1))
 
-# Final plot
-st.subheader('Original Price vs Predicted Price')
-fig4 = plt.figure(figsize=(10, 6))
-plt.plot(y, 'g', label='Original Price')
-plt.plot(predict, 'r', label='Predicted Price')
-plt.xlabel('Time')
+# Prepare future dates
+last_date = data.index[-1]
+future_dates = pd.date_range(last_date + pd.Timedelta(days=1), periods=future_days)
+
+# Display predicted prices
+st.subheader(f'📅 Predicted Prices for Next {future_days} Days')
+pred_df = pd.DataFrame({'Date': future_dates, 'Predicted Close': predicted_prices.flatten()})
+st.write(pred_df)
+
+# Plot historical + predicted prices
+st.subheader('📈 Historical Close vs Predicted Future Close')
+plt.figure(figsize=(12,6))
+plt.plot(close_data, label='Historical Close')
+plt.plot(future_dates, predicted_prices, label='Predicted Future Close', color='red')
+plt.xlabel('Date')
 plt.ylabel('Price')
 plt.legend()
-st.pyplot(fig4)
+st.pyplot(plt)
