@@ -12,14 +12,14 @@ model = load_model("Stock Prediction Model.keras")
 st.header('📈 Stock Price Prediction')
 
 # Input
-stock = st.text_input('Enter Stock Symbol')
+stock = st.text_input('Enter Stock Symbol','GOOG')
 start = '2012-01-01'
 end = '2024-12-31'
 
 # Download stock data
 data = yf.download(stock, start, end)
 
-st.subheader('Stock Data','GOOG')
+st.subheader('Stock Data')
 st.write(data)
 
 # Split data
